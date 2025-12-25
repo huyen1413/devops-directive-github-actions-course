@@ -33,16 +33,24 @@ jobs:
       - name: Install SQLFluff
         run: pip install sqlfluff sqlfluff-templater-dataform
 
+      - name: Verify changed SQL files
+        uses: tj-actions/verify-changed-files@a1c6acee9df209257a246f2cc6ae8cb6581c1edf # v20
+        id: verify-changed-sql
+        with:
+          files: |
+            **/*.sql
+            **/*.sqlx
       - name: Run SQLFluff lint (changed files only)
+        if: steps.verify-changed-sql.outputs.files_changed == 'true'
+        env:
+          CHANGED_FILES: ${{ steps.verify-changed-sql.outputs.changed_files }}
         run: |
-          git fetch origin ${{ github.base_ref }}
-          files=$(git diff --name-only origin/${{ github.base_ref }}...HEAD \
-            | grep -E '\.(sql|sqlx)$' || true)
+          echo "Changed SQL files:"
+          echo "$CHANGED_FILES"
       
-          if [ -z "$files" ]; then
-            echo "No SQL files changed"
-            exit 0
-          fi
-      
-          sqlfluff lint $files --dialect bigquery
+          sqlfluff lint $CHANGED_FILES \
+            --dialect bigquery \
+            --templater dataform
+
+
 
