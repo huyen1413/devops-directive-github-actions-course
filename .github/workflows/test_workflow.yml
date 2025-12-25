@@ -22,8 +22,13 @@ jobs:
       - name: Install Dataform CLI
         run: npm install -g @dataform/cli
 
-      - name: Install sqlfluff
-        run: npm install -g sqlfluff
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install SQLFluff
+        run: pip install sqlfluff sqlfluff-templater-dataform
 
       - name: Run sqlfluff lint
         run: sqlfluff lint --dialect bigquery test.sql
