@@ -30,5 +30,16 @@ jobs:
       - name: Install SQLFluff
         run: pip install sqlfluff sqlfluff-templater-dataform
 
-      - name: Run sqlfluff lint
-        run: sqlfluff lint --dialect bigquery test.sql
+      - name: Run SQLFluff lint (changed files only)
+        run: |
+          git fetch origin ${{ github.base_ref }}
+          files=$(git diff --name-only origin/${{ github.base_ref }}...HEAD \
+            | grep -E '\.(sql|sqlx)$' || true)
+      
+          if [ -z "$files" ]; then
+            echo "No SQL files changed"
+            exit 0
+          fi
+      
+          sqlfluff lint $files --dialect bigquery
+
